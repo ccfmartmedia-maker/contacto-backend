@@ -1,3 +1,4 @@
+// index.js
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -5,25 +6,24 @@ const nodemailer = require('nodemailer');
 
 const app = express();
 
-// Permitir peticiones desde cualquier origen (puedes restringir a tu dominio luego)
 app.use(cors());
 app.use(express.json());
 
-// Ruta simple para probar que el backend vive
+// Ruta simple para comprobar que el backend vive
 app.get('/', (req, res) => {
   res.send('Backend de contacto funcionando ✅');
 });
 
-// 👉 Transporter usando "service: gmail" (más simple)
+// 👉 Transporter usando servicio de Gmail
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.SMTP_USER, // tu correo Gmail
-    pass: process.env.SMTP_PASS, // contraseña de aplicación
+    pass: process.env.SMTP_PASS, // contraseña de aplicación (SIN espacios)
   },
 });
 
-// Verificar que el SMTP esté listo
+// Verificar conexión SMTP al arrancar
 transporter.verify((error, success) => {
   if (error) {
     console.error('❌ Error verificando SMTP:', error);
@@ -32,7 +32,7 @@ transporter.verify((error, success) => {
   }
 });
 
-// Ruta del formulario
+// Ruta que recibe el formulario
 app.post('/contact', async (req, res) => {
   try {
     const {
@@ -47,12 +47,12 @@ app.post('/contact', async (req, res) => {
 
     console.log('📥 Datos recibidos:', req.body);
 
-    // Validaciones básicas
+    // Validación en el backend
     if (!firstName || !lastName || !email || !help || !privacyAccepted) {
       return res.status(400).json({ error: 'Faltan campos requeridos' });
     }
 
-    // 👉 CORREO QUE RECIBE EL MENSAJE (del cliente)
+    // 👉 Correo del cliente que va a recibir el mensaje
     const destinatario = 'carloagarcia1405@gmail.com';
 
     await transporter.sendMail({
@@ -70,7 +70,7 @@ app.post('/contact', async (req, res) => {
     });
 
     console.log('✅ Correo enviado correctamente');
-    return res.json({ message: 'Correo enviado correctamente' });
+    return res.json({ ok: true, message: 'Correo enviado correctamente' });
   } catch (error) {
     console.error('❌ Error al enviar el correo:', error);
     return res.status(500).json({ error: 'Error al enviar el correo' });
